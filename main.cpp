@@ -226,6 +226,7 @@ int main(int argc, char **argv) {
     int numberOfOperations = atoi(argv[1]);
     int numberOfThreads = atoi(argv[2]);
 
+    std::cout << "Binary search tree via mutex" << std::endl;
     std::cout << "operations: " << numberOfOperations << "\tthreads: " << numberOfThreads << std::endl;
     srand((unsigned int) time(NULL));
 
