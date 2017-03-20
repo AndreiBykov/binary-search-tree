@@ -45,7 +45,7 @@ class BinaryTree {
 
 private:
     BinaryTreeEntry *root;
-    pthread_mutex_t mutex;
+    pthread_rwlock_t rwlock;
 
     void removeEntry(BinaryTreeEntry *entry) {
         entry->left = nullptr;
@@ -55,14 +55,14 @@ private:
 
 public:
     BinaryTree() {
-        pthread_mutex_init(&mutex, NULL);
+        pthread_rwlock_init(&rwlock, NULL);
     }
 
     bool add(int value) {
-        pthread_mutex_lock(&mutex);
+        pthread_rwlock_wrlock(&rwlock);
         if (root == nullptr) {
             root = new BinaryTreeEntry(value);
-            pthread_mutex_unlock(&mutex);
+            pthread_rwlock_unlock(&rwlock);
             return true;
         }
 
@@ -75,7 +75,7 @@ public:
             else if (value < temp->value)
                 temp = temp->left;
             else {
-                pthread_mutex_unlock(&mutex);
+                pthread_rwlock_unlock(&rwlock);
                 return false;
             }
         } while (temp != nullptr);
@@ -86,17 +86,17 @@ public:
             parent->right = newEntry;
         else
             parent->left = newEntry;
-        pthread_mutex_unlock(&mutex);
+        pthread_rwlock_unlock(&rwlock);
         return true;
 
     }
 
     bool remove(int value) {
-        pthread_mutex_lock(&mutex);
+        pthread_rwlock_wrlock(&rwlock);
         BinaryTreeEntry *temp = root;
 
         if (temp == nullptr) {
-            pthread_mutex_unlock(&mutex);
+            pthread_rwlock_unlock(&rwlock);
             return false;
         }
 
@@ -107,7 +107,7 @@ public:
             } else
                 root = temp->right;
             removeEntry(temp);
-            pthread_mutex_unlock(&mutex);
+            pthread_rwlock_unlock(&rwlock);
             return true;
         }
 
@@ -121,7 +121,7 @@ public:
         } while (temp != nullptr && temp->value != value);
 
         if (temp == nullptr) {
-            pthread_mutex_unlock(&mutex);
+            pthread_rwlock_unlock(&rwlock);
             return false;
         }
 
@@ -140,12 +140,12 @@ public:
         }
 
         removeEntry(temp);
-        pthread_mutex_unlock(&mutex);
+        pthread_rwlock_unlock(&rwlock);
         return true;
     }
 
     bool contains(int value) {
-        pthread_mutex_lock(&mutex);
+        pthread_rwlock_rdlock(&rwlock);
         BinaryTreeEntry *temp = root;
 
         while (temp != nullptr) {
@@ -154,25 +154,25 @@ public:
             else if (value < temp->value)
                 temp = temp->left;
             else {
-                pthread_mutex_unlock(&mutex);
+                pthread_rwlock_unlock(&rwlock);
                 return true;
             }
         }
-        pthread_mutex_unlock(&mutex);
+        pthread_rwlock_unlock(&rwlock);
         return false;
     }
 
     void removeAll() {
-        pthread_mutex_lock(&mutex);
+        pthread_rwlock_wrlock(&rwlock);
         if (root != nullptr) {
             delete root;
             root = nullptr;
         }
-        pthread_mutex_unlock(&mutex);
+        pthread_rwlock_unlock(&rwlock);
     }
 
     ~BinaryTree() {
-        pthread_mutex_destroy(&mutex);
+        pthread_rwlock_destroy(&rwlock);
         if (root != nullptr)
             delete root;
     }
@@ -226,6 +226,7 @@ int main(int argc, char **argv) {
     int numberOfOperations = atoi(argv[1]);
     int numberOfThreads = atoi(argv[2]);
 
+    std::cout << "Binary search tree via rwlock" << std::endl;
     std::cout << "operations: " << numberOfOperations << "\tthreads: " << numberOfThreads << std::endl;
     srand((unsigned int) time(NULL));
 
